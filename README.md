@@ -1,6 +1,10 @@
 # ADB-Wifi
 A script to automatically connect to android devices in debug mode using WIFI
 
+<p align="center">
+<img src="extras/example.gif" width="100%" />
+</p>
+
 ## Motivation
 Everyday I need to connect to a lot of diferent devices to debug applications.
 Some devices are USB2 and others USB3 and I lose time plugging the devices and waiting for the ADB.
