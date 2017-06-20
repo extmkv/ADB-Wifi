@@ -7,12 +7,12 @@ import time
 
 PORT = 5555
 CONFIG_FILE = '.adb_wifi.config'
-SCAN_TIME = 10
+SCAN_TIME = 5
 
 # Connect to an android device
 def connectToDevice(ip):
     print "Trying to connect to " + ip
-    result = os.popen("adb connect " + ip + ":" + PORT).read()
+    result = os.popen("adb connect " + ip + ":" + str(PORT)).read()
     if result.find("connected") != -1:
         return True
     else:
@@ -57,7 +57,7 @@ while True:
     for deviceID in getDecidesIDs(adbDevices):
         ip = getIPfromDeviceID(deviceID)
         if(ip != "" and verifyIfNotConnected(adbDevices, ip)):
-            os.popen("adb -s " + deviceID + " tcpip " + PORT)
+            os.popen("adb -s " + deviceID + " tcpip " + str(PORT))
             print "Added new ip to connect " + ip
             ipsToConnect.append(ip)
 
