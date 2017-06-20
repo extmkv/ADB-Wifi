@@ -1,6 +1,6 @@
 # ADB-Wifi
-A script to automatically connect to android devices in debug mode using WIFI
-
+A script to automatically connect android devices in debug mode using WIFI 
+ 
 <p align="center">
 <img src="extras/example.gif" width="100%" />
 </p>
