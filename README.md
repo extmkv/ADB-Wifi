@@ -36,5 +36,5 @@ You can add the ```adb-wifi``` to your startup applications.
 If your device has rooted you can use this [application](https://play.google.com/store/apps/details?id=com.ttxapps.wifiadb)
  to turn on the ```tcpip port```and ignore this step.
 
-### Created & Maintained By
+## Created & Maintained By
 [Jorge Costa](https://github.com/extmkv)
