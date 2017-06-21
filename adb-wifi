@@ -1,4 +1,4 @@
-#!/ust/bin/python
+#!/usr/bin/env python
 
 import os
 import re
@@ -11,7 +11,7 @@ SCAN_TIME = 5
 
 # Connect to an android device
 def connectToDevice(ip):
-    print "Trying to connect to " + ip
+    print("Trying to connect to " + ip)
     result = os.popen("adb connect " + ip + ":" + str(PORT)).read()
     if result.find("connected") != -1:
         return True
@@ -42,7 +42,7 @@ def readIPConnections():
 # Save devices
 def saveIPConnections(oldIps):
     with open(CONFIG_FILE, 'w') as f:
-        print "Saving the new connections..."
+        print("Saving the new connections...")
         f.write(','.join(oldIps))
         f.close()
 
@@ -58,18 +58,18 @@ while True:
         ip = getIPfromDeviceID(deviceID)
         if(ip != "" and verifyIfNotConnected(adbDevices, ip)):
             os.popen("adb -s " + deviceID + " tcpip " + str(PORT))
-            print "Added new ip to connect " + ip
+            print("Added new ip to connect " + ip)
             ipsToConnect.append(ip)
 
     ipsConnected = []
     for ip in list(set(ipsToConnect)):
         if(verifyIfNotConnected(adbDevices, ip)):
-            print "Not connected to " + ip
+            print("Not connected to " + ip)
             if connectToDevice(ip):
-                print "Connected to " + ip
+                print("Connected to " + ip)
                 ipsConnected.append(ip)
             else:
-                print "Failed to connected to " + ip
+                print("Failed to connected to " + ip)
 
     if ipsConnected:
         oldIps.extend(ipsConnected)
