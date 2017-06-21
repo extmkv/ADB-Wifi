@@ -6,7 +6,7 @@ import sys
 import time
 
 PORT = 5555
-CONFIG_FILE = '.adb_wifi.config'
+CONFIG_FILE = os.path.expanduser('~/.adb-wifi.cfg')
 SCAN_TIME = 5
 
 # Connect to an android device
