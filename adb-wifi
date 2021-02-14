@@ -4,76 +4,85 @@ import os
 import re
 import sys
 import time
+import nmap
+import netifaces
+from netaddr import IPNetwork
 
 PORT = 5555
-CONFIG_FILE = os.path.expanduser('~/.adb-wifi.cfg')
-SCAN_TIME = 5
 
-# Connect to an android device
+
 def connectToDevice(ip):
-    print("Trying to connect to " + ip)
+    # Connect to an android device
     result = os.popen("adb connect " + ip + ":" + str(PORT)).read()
     if result.find("connected") != -1:
         return True
     else:
         return False
 
-# Get all device IDs connected in an USB port
+
 def getDecidesIDs(adbDevices):
+    # Get all device IDs connected in an USB port
     return re.findall('(.*?)\tdevice', adbDevices)
 
-# Find ip from the device connect in USB port
+
 def getIPfromDeviceID(deviceID):
+    # Find ip from the device connect in USB port
     return os.popen("adb -s " + deviceID + " shell ip route | grep wlan0 | awk {\'if( NF >=9){print $9;}\'}").read().rstrip()
 
-# Verify if the device is already connected (wifi)
+
 def verifyIfNotConnected(adbDevices, ip):
+    # Verify if the device is already connected (wifi)
     return adbDevices.find(ip) == -1
 
-# Get old connections from the configuration file
-def readIPConnections():
-    ips = []
-    if os.path.isfile(CONFIG_FILE) and os.stat(CONFIG_FILE).st_size > 0:
-        with open(CONFIG_FILE, 'r') as f:
-            ips = f.read().split(',')
-            f.close
-    return ips
 
-# Save devices
-def saveIPConnections(oldIps):
-    with open(CONFIG_FILE, 'w') as f:
-        print("Saving the new connections...")
-        f.write(','.join(oldIps))
-        f.close()
+def getConnectedNetworks():
+    networks = []
+    cards = netifaces.interfaces()
+    for card in cards:
+        iface_details = netifaces.ifaddresses(card)
+        if netifaces.AF_INET in iface_details:
+            ip = iface_details[netifaces.AF_INET][0]['addr']
+            mask = iface_details[netifaces.AF_INET][0]['netmask']
+            cidr = str(IPNetwork('%s/%s' % (ip, mask)).cidr)
+            if(not cidr.startswith("127.0.0")):
+                networks.append(cidr)
+    return networks
 
 
-oldIps = readIPConnections()
+def getNetworkDevices():
+    devices = []
+
+    for network in getConnectedNetworks():
+        hosts = nm.scan(
+            hosts=network,
+            ports=str(PORT),
+            arguments=""
+        )
+
+        devices.extend([host for host in hosts['scan'] if hosts['scan']
+                        [host]["tcp"][PORT]["state"] == "open"])
+    return devices
+
+
+nm = nmap.PortScanner()
 
 while True:
-    ipsToConnect = []
-    ipsToConnect.extend(oldIps)
+
+    devices = getNetworkDevices()
 
     adbDevices = os.popen("adb devices").read()
+
     for deviceID in getDecidesIDs(adbDevices):
         ip = getIPfromDeviceID(deviceID)
-        if(ip != "" and verifyIfNotConnected(adbDevices, ip)):
+        if(ip != "" and ip not in devices and verifyIfNotConnected(adbDevices, ip)):
             os.popen("adb -s " + deviceID + " tcpip " + str(PORT))
-            print("Added new ip to connect " + ip)
-            ipsToConnect.append(ip)
+            print("PORT 5555 open for " + ip)
 
-    ipsConnected = []
-    for ip in list(set(ipsToConnect)):
-        if(verifyIfNotConnected(adbDevices, ip)):
-            print("Not connected to " + ip)
-            if connectToDevice(ip):
-                print("Connected to " + ip)
-                ipsConnected.append(ip)
-            else:
-                print("Failed to connected to " + ip)
+    devicesToConnect = [ip for ip in devices if ip not in adbDevices]
 
-    if ipsConnected:
-        oldIps.extend(ipsConnected)
-        oldIps = list(set(oldIps))
-        saveIPConnections(oldIps)
-
-    time.sleep(SCAN_TIME)
+    for ip in devicesToConnect:
+        print("Detected new device to connect: " + ip)
+        if (connectToDevice(ip)):
+            print("Connected to " + ip)
+        else:
+            print("Failed to connected to " + ip)
